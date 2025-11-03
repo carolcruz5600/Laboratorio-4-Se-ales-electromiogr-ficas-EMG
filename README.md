@@ -1,1 +1,1 @@
-# Laboratorio-4-Se-ales-electromiogr-ficas-EMG
+# Laboratorio 4: Señales electromiográficas EMG
