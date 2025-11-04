@@ -47,7 +47,7 @@ drive.mount('/content/drive')
 # **Parte A**
 
 # **Parte B**
-### **1. Registro Electromiográfico**
+### 1. Registro Electromiográfico
 Para esta parte del laboratorio se registró la actividad electromiográfica (EMG) del músculo bíceps braquial durante contracciones repetidas hasta la fatiga. Los electrodos se ubicaron sobre el vientre muscular, siguiendo el eje de las fibras, mientras que el electrodo de referencia se colocó en una prominencia ósea del codo (epicóndilo lateral o proceso del olécranon), garantizando una señal estable y libre de interferencias.
 
 El bíceps braquial fue elegido por su fácil acceso, su papel definido en la flexión del codo y la posibilidad de generar contracciones controladas para observar la fatiga muscular. La referencia en el codo proporciona un punto de potencial cero adecuado debido a la mínima actividad muscular en esa zona.
@@ -56,7 +56,7 @@ Durante el protocolo, el voluntario realizó contracciones repetidas hasta la fa
 
 Para la adquisición de los datos se utilizó un sistema de adquisición de datos (DAQ), junto con un código de captura implementado en tiempo real que permitió el registro continuo de la señal electromiográfica durante todo el protocolo experimental. Este sistema garantizó la digitalización y almacenamiento de la señal EMG con una frecuencia de muestreo adecuada para preservar las características relevantes de la actividad muscular y facilitar el análisis posterior.
 
-### **2. Filtro Pasa Banda (20 - 450 Hz)**
+### 2. Filtro Pasa Banda (20 - 450 Hz)
 >### 2.1. Importación de la Señal
 Para la implementación en *Google Colab*, en primera instancia se cargaron los archivos ``.txt`` en la unidad de *Drive* para posteriormente ser leídos desde el entorno. La vinculación del *Drive* se realizó de la siguiente manera:
 
@@ -132,7 +132,7 @@ La ventana mostrada (entre las muestras 50 000 y 80 000) evidencia de manera cla
 
 <img width="1000" height="390" alt="image" src="https://github.com/user-attachments/assets/32a5197c-3e44-49d3-8b13-8ffe56f048d1" />
 
-### **3. Segmentación de la Señal **
+### 3. Segmentación de la Señal 
 >### 3.1. Definición de parámetros generales
 
 ```python
@@ -204,15 +204,10 @@ def merge_segments(segs, gap_samples):
 
 segs_merged = merge_segments(segments, int(round(MERGE_GAP_S * FS)))
 ```
-En ese fragmento de código se ejecuta la función ``merge_segments``, que fusiona los intervalos cercanos entre sí dentro de una separación máxima definida por ``MERGE_GAP_S``. Este proceso evita que una misma contracción muscular, que puede presentar leves interrupciones en la señal, sea contabilizada como múltiples eventos separados. De esta manera, los segmentos contiguos que se encuentran a una distancia menor al umbral especificado ``(gap_samples)`` se combinan en uno solo, obteniendo un conjunto de segmentos unificados ``(segs_merged)`` que representan contracciones completas y continuas.
 
-Dentro del recorrido ``for s, e in segs_merged``, el algoritmo analiza cada uno de los intervalos previamente fusionados. Para cada segmento, se extrae la porción correspondiente de la señal EMG y se calculan sus principales características: la amplitud pico a pico, que representa la diferencia entre los valores máximo y mínimo dentro del intervalo; el valor RMS, que cuantifica la energía media del segmento; y su duración, expresada en segundos a partir del número de muestras. Estos indicadores permiten evaluar la intensidad y extensión temporal de la contracción.
+En este fragmento se ejecuta la función ``merge_segments``, que fusiona los intervalos cercanos entre sí dentro de una separación máxima definida por ``MERGE_GAP_S``. Este proceso evita que una misma contracción muscular —que puede presentar leves interrupciones en la señal— sea contabilizada como múltiples eventos separados. De esta manera, los segmentos contiguos que se encuentran a una distancia menor al umbral especificado ``(gap_samples)`` se combinan en uno solo, obteniendo un conjunto de intervalos unificados ``(segs_merged)`` que representan contracciones completas y continuas.
 
-A partir de ellos, se aplican los criterios definidos para conservar únicamente las activaciones válidas: el segmento debe tener una duración superior al umbral mínimo establecido ``(MIN_DUR_S)`` y, además, presentar valores de amplitud y energía superiores a los umbrales derivados del nivel de ruido de la señal (p2p_thresh y rms_thresh). Si cumple estas condiciones, el intervalo se guarda en la lista ``filtered_segs``, que representa las contracciones musculares finales.
-
-Esta etapa constituye el filtro más selectivo del procedimiento, teniendo en cuenta que descarta falsas contracciones generadas por picos aislados o variaciones menores en la señal, garantizando que las detecciones correspondan efectivamente a eventos musculares reales. El resultado es una delimitación precisa de las contracciones, condición esencial para el análisis posterior de la evolución temporal y espectral de la señal EMG.
-
-Posteriormente, se realiza la estimación del nivel de ruido, mediante el siguiente fragmento de código: 
+A continuación, se calcula una estimación robusta del nivel de ruido de la señal, con el fin de establecer los umbrales de detección adecuados:
 
 ```python
 residual = emg - savgol_filter(emg, 1001 if len(emg)>1001 else SG_WIN, SG_POLY)
@@ -221,7 +216,7 @@ noise_std = mad / 0.6745
 p2p_thresh = P2P_MULT_NOISE * noise_std
 rms_thresh = RMS_MULT_NOISE * noise_std
 ```
-En esta etapa se calcula una estimación robusta del ruido a partir del residuo entre la señal original y su versión suavizada. Con ello se determinan los umbrales mínimos de amplitud pico a pico (p2p) y energía RMS, que se utilizan como filtros adicionales para descartar eventos de baja intensidad no asociados a verdadera actividad muscular.
+Este bloque calcula el residuo entre la señal original y su versión suavizada mediante el filtro de Savitzky–Golay, estimando la desviación estándar del ruido (noise_std) a partir de la mediana de las desviaciones absolutas (MAD). Con ello se definen los umbrales mínimos de amplitud pico a pico ``(p2p_thresh)`` y de energía RMS ``(rms_thresh)``, que sirven como referencia para descartar eventos de baja intensidad no asociados a verdadera actividad muscular.
 
 >### 3.5. Filtrado final de contracciones válidas
 
@@ -237,11 +232,9 @@ for s, e in segs_merged:
         filtered_segs.append((s, e))
 ```
 
-Dentro del ciclo ``for s, e in segs_merged``, el algoritmo analiza cada uno de los intervalos previamente fusionados. Para cada segmento, se extrae la porción correspondiente de la señal EMG y se calculan sus principales características: la amplitud pico a pico, que representa la diferencia entre los valores máximo y mínimo dentro del intervalo; el valor RMS, que cuantifica la energía media del segmento; y su duración, expresada en segundos a partir del número de muestras. Estos indicadores permiten evaluar tanto la intensidad como la extensión temporal de cada contracción.
+Dentro del ciclo ``for s, e in segs_merged``, se analiza cada intervalo fusionado extrayendo la porción correspondiente de la señal EMG y calculando sus características principales: amplitud pico a pico (diferencia entre valores máximo y mínimo), valor RMS (energía media del segmento) y duración en segundos. Estos indicadores permiten evaluar la intensidad y extensión temporal de cada contracción.
 
-Posteriormente, se implementó un proceso de validación de las contracciones detectadas mediante la aplicación de tres criterios de aceptación: (1) una duración mínima suficiente para descartar transitorios y artefactos de corta duración, (2) una amplitud pico a pico significativa que refleje una activación muscular genuina y (3) una energía RMS superior al nivel de ruido basal de la señal.
-
-Únicamente las contracciones que satisfacen simultáneamente estos tres requisitos se conservan como eventos válidos para el análisis posterior, garantizando así la exclusión de falsas detecciones y artefactos. De esta manera, el conjunto ``filtered_segs`` reúne únicamente los intervalos que corresponden a activaciones musculares reales, lo que permite continuar el procesamiento con una base de datos limpia y confiable para el análisis cuantitativo y temporal de la señal EMG.
+Posteriormente, se validaron las contracciones mediante tres criterios de aceptación: (1) duración mínima suficiente para descartar artefactos transitorios, (2) amplitud pico a pico significativa que refleje activación muscular genuina y (3) energía RMS superior al nivel de ruido basal. Únicamente las contracciones que satisfacen simultáneamente estos requisitos se conservan como eventos válidos, garantizando la exclusión de falsas detecciones. El conjunto ``filtered_segs`` reúne así los intervalos correspondientes a activaciones musculares reales, proporcionando una base confiable para el análisis cuantitativo y temporal posterior.
 
 >### 3.6. Visualización de resultados
 
@@ -304,7 +297,8 @@ Por el contrario, las últimas cinco contracciones (``266–270 s`` aproximadame
 
 Adicionalmente, la dispersión en la morfología de las últimas contracciones revela una mayor variabilidad inter-evento, atribuible tanto a fluctuaciones en la fuerza aplicada como a la degradación de la eficiencia neuromuscular conforme avanza el protocolo de fatiga. Esta evolución en las características de la señal confirma la transición desde un estado de contracción óptima hacia un estado de fatiga muscular manifiesta. En conjunto, este procedimiento ofrece una visión detallada del comportamiento electromiográfico durante el desarrollo de la fatiga, complementando los análisis numéricos realizados previamente.
 
-### **4. Cálculo de Frecuencia Media y Mediana por Contracción **
+### 4. Cálculo de Frecuencia Media y Mediana por Contracción 
+
 La  Frecuencia Media y Mediana representan la distribución de energía en el dominio de la frecuencia: la frecuencia media indica el centro de gravedad del espectro de potencia, mientras que la frecuencia mediana corresponde al punto que divide la energía espectral acumulada en dos mitades iguales. Ambos parámetros son indicadores clave del estado fisiológico del músculo, debido a que su desplazamiento hacia frecuencias más bajas suele asociarse con la fatiga muscular o con una reducción en la velocidad de conducción de las fibras.
 
 El siguiente fragmento de código calcula la frecuencia media y frecuencia mediana de cada contracción muscular detectada.
