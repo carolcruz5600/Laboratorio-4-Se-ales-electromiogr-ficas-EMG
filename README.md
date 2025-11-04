@@ -337,10 +337,6 @@ for i, (s, e) in enumerate(filtered_segs):
 
     f_mean_list.append(f_mean)
     f_median_list.append(f_median)
-
-    print(f"\nContracción {i+1}:")
-    print(f"  Frecuencia media  = {f_mean:.2f} Hz")
-    print(f"  Frecuencia mediana = {f_median:.2f} Hz")
 ```
 En el código, se itera sobre cada contracción identificada en la lista filtered_segs, extrayendo su correspondiente porción de la señal ``(seg_y)``. Para cada segmento se calcula la Transformada Rápida de Fourier (FFT), a partir de la cual se obtiene el espectro de potencia ``(Pxx = |Y|² / N)``, que refleja la energía distribuida a lo largo de las distintas frecuencias. A partir de este espectro se determina la frecuencia media mediante un promedio ponderado ``(np.sum(f * Pxx) / np.sum(Pxx))``, y la frecuencia mediana se calcula identificando el punto en el que la energía acumulada alcanza la mitad del total ``(np.cumsum(Pxx))``. Los valores resultantes se almacenan en las listas ``f_mean_list y f_median_list``, respectivamente, permitiendo analizar la evolución de ambas métricas a lo largo del registro.
 
