@@ -46,6 +46,457 @@ drive.mount('/content/drive')
 
 # **Parte A**
 
+## **1. Captura de la señal**
+
+Se configura el generador de señales para una señal de EMG (electromiografía) para poder simular aproximademente cinco contracciones musculares. Este tipo de señal muestra la actividad eléctrica generada por las fibras musculares durante la contracción, observando las variaciones de amplitud y frecuencia asociadas al esfuerzo muscular. Se ajusto la frecuencia de 1 Hz en el generador. Posterior, se realiza la captura de la señal a través del DAQ, permitiendo obtener y almacenar la señal EMG simulada para poder realizar el análisis. 
+
+## **2. Carga de la señal**
+
+Se realiza la carga de la señal EMG que se encuentra en un archivo txt, dando parámetros básicos. Se da la ruta del archivo para poder cargar los valores numéricos cada uno por linea. Se abre el archivo y se lee todos los datos linea por linea, conviertiendo cada dato en un número decimal. El uso de la función ``if line.strip()`` asegura que el código ignore líneas vacías, los datos leidos se guardan en la definición ``emg_generador``, tomando toda la señal completa. 
+
+En el código se calcula el número total de muestras usando ``len(emg_generador)`` y se almacena en la variable ``n_generador``, también se da la definición del tiempo usado de $10 segundos$ en ``duración_generador`` y una frecuencia de muestreo de $f_s=5000Hz$ en ``fs_generador``, indicando que se tomaron 5000 datos por segundo. Finalmente estos valores se muestran.
+
+```python
+emg_file_path = '/content/drive/MyDrive/Colab Notebooks/Lab Procesamiento Digital de Señales/Señal EMG5000.txt' 
+
+with open(emg_file_path, 'r') as f:
+    emg_generador = [float(line) for line in f if line.strip()]
+
+n_generador = len(emg_generador)
+duracion_generador = 10
+fs_generador = 5000
+
+print("Muestras:", n_generador)
+print("Duración:", duracion_generador, "s")
+print("fs:", fs_generador, "Hz")
+```
+## **3. Gráfica de la señal generada**
+
+Con el código se muestra la gráfica de la señal EMG. Tomando los valores de la señal que se habían cargado anteriormente creando un eje ene le tiempo correspondiente con una medición de voltaje. Así, trazando la amplitud en función del tiempo obteniendo una forma de onda que refleja las contracciones simuladas por el generador. El código ajusta los límites del eje temporal y de amplitud para visualizar con mayor detalle los primeros segundos del registro (de 0 a 5 s) y evitar que la señal se vea saturada o muy comprimida.
+
+Se observa la señal electromiográfica. En el eje horizontal se representa el tiempo (s), de 0 a 10 segundos y en el vertical se muestra la amplitud (v).
+
+```python
+# Gráfica de la señal del generador
+t_generador = np.arange(n_generador)/fs_generador # Crea el vector de tiempo
+plt.figure(figsize=(12,4))
+plt.plot(t_generador,emg_generador)
+plt.axis([0,duracion_generador,-10,10])
+plt.xlim(0,5)
+plt.ylim(-1.5,1.5)
+plt.grid()
+plt.title(f"EMG Generador")
+plt.xlabel("Tiempo (s)")
+plt.ylabel("Amplitud (V)")
+plt.show()
+```
+
+<img width="1254" height="393" alt="image" src="https://github.com/user-attachments/assets/fe132966-184e-4422-88ab-5352e25e8d78" />
+
+## 4. Segmentación
+
+>### **4.1 Parámetros Iniciales**
+
+Se establecen los parámetros que controlan la detección de las contracciones en el EMG. Se define la frecuencia de muestreo $FS$, se fija una duración minima de contracción equivalente a 20ms evitando que se vean falsos positivos. Los valores definidos en ``SG_WIN=51`` y ``SG_POLY=3`` corresponden a la configuración del filtro **Savitzky-Golay**, empleado para suavizar la señal sin distorsionar la forma. Por su parte,`` DERIV_STD_MULT = 3.0`` establece el nivel de sensibilidad del detector, considerando todo cambio que supere tres veces la desviación estándar de la derivada. Finalmente, ``MERGE_GAP_S = 0.2`` define el tiempo máximo entre contracciones consecutivas para unirlas.
+
+```python
+FS = 5000
+MIN_DUR_S = 0.02
+SG_WIN = 51
+SG_POLY = 3
+DERIV_STD_MULT = 3.0
+MERGE_GAP_S = 0.2
+```
+
+>### **4.2 Carga de la señal**
+
+En este bloque se prepara la señal y se genera su eje temporal. La variable ``emg`` almacena la señal previamente cargada desde el archivo de texto, mientras que ``t = np.arange(len(emg)) / FS`` construye un vector de tiempo que asigna un instante en segundos a cada muestra. Este paso sirve para que la señal se logre representar correctamente en función del tiempo, calculando la duración exacta de cada evento detectado más adelante.
+
+```python
+# carga
+emg = emg_generador
+t = np.arange(len(emg)) / FS
+```
+
+>### **4.3 Suavizado y calculo de la derivada**
+
+Aquí se aplica el filtro mencionado anteriormente a partir de la función ``savgol_filter()``, para poder reducir el ruido de la señal EMG sin alterar su formal. Este suavizado ayuda con la detección de cambios reales de amplitud. Luego, se calcula la derivada numérica con ``np.gradient(smoothed) * FS``, midiendo el cambio en el tiempo de la señal. En una señal EMG, las contracciones se manifiestan como variaciones rápidas en la amplitud, por lo que analizar la derivada permite localizar los momentos donde la actividad eléctrica del músculo aumenta o disminuye bruscamente.
+
+```python
+smoothed = savgol_filter(emg, SG_WIN, SG_POLY)
+deriv = np.gradient(smoothed) * FS 
+```
+>### **4.4 Cálculo de umbrales para la detección**
+
+Se determina los límites que definirán cuándo ocurre la contracción muscular. Se calcula la media ``(mu)`` y la desviación estándar ``(sigma)`` de la derivada, y a partir de estos valores se definen los umbrales superior ``(thr_pos)`` e inferior ``(thr_neg)``. Cuando la derivada supera el umbral positivo, sera el inicio de una contracción, mientras que cuando cae por debajo del umbral negativo, sera el final de la contracción.
+
+```python
+mu = np.mean(deriv)
+sigma = np.std(deriv)
+thr_pos = mu + DERIV_STD_MULT * sigma
+thr_neg = mu - DERIV_STD_MULT * sigma
+```
+>### **4.5 Detección de onsets y offsets**
+
+Los puntos donde la derivada es mayor que ``thr_pos`` se guardan en ``onsets_idx`` y guardando los inicios de las contracciones, mientras que los puntos donde la derivada es menor que ``thr_neg`` se almacenan en ``offsets_idx`` y guardan los finales de las contracciones.
+
+```python
+onsets_idx = np.where(deriv > thr_pos)[0]
+offsets_idx = np.where(deriv < thr_neg)[0]
+```
+> ### **4.6 Emparejar inicios y finales de contracciones**
+
+Luego se empareja los puntos de inicio y fin para formar cada uno de lossegmentos de contracción válidos. Para cada inicio detectado, busca el primer final que ocurre después, calculando la duración del evento. Si la diferencia entre ambos supera el tiempo mínimo establecido anteriormente en los parámetros iniciales ``(MIN_DUR_S)``, el segmento se guarda como una contracción real. Esto ayuda a la vez a evitar tomar contracciones muy cortas. El resultado es una variable que contienen las posiciones exactas, en número de muestra, de cada contracción identificada.
+
+```python
+min_samples = int(round(MIN_DUR_S*FS))
+segments = []
+i=0
+while i < len(onsets_idx) and i < len(offsets_idx):
+    s = onsets_idx[i]
+    offs_after = offsets_idx[offsets_idx > s]
+    if len(offs_after)==0: break
+    e = offs_after[0]
+    if e - s >= min_samples:
+        segments.append((s,e))
+    i += 1
+```
+
+> ### **4.7 Unión de contracciones**
+
+Se incluye una función llamada merge_segments() que revisa la lista de contracciones y fusiona las que están muy próximas entre sí. Si el intervalo entre el final de una contracción y el inicio de la siguiente es menor que MERGE_GAP_S (0.2 s), se unen en una sola contracción.
+
+```python
+def merge_segments(segs, gap_samples):
+    if not segs: return []
+    segs = sorted(segs, key=lambda x: x[0])
+    merged = [list(segs[0])]
+    for s,e in segs[1:]:
+        prev = merged[-1]
+        if s <= prev[1] + gap_samples:
+            prev[1] = max(prev[1], e)
+        else:
+            merged.append([s,e])
+    return [(int(a),int(b)) for a,b in merged]
+
+segs_merged = merge_segments(segments, int(round(MERGE_GAP_S*FS)))
+```
+
+> ### **4.8 Resultados detectados**
+
+Para cada contracción se muestra el tiempo de inicio, el tiempo de fin y la duración total en segundos. Esto permite verificar que la detección se haya realizado de manera correcta.
+```Python
+print("Deriv-based events:", len(segs_merged))
+for i,(s,e) in enumerate(segs_merged):
+    print(i+1, f"{s/FS:.4f}s - {e/FS:.4f}s, dur={(e-s)/FS:.4f}s")
+```
+
+<p align="center"><b>Resultados</b></p>
+
+<div align="center">
+<pre>
+Deriv-based events: 10
+
+1 0.1232s - 0.6412s, dur=0.5180s
+2 0.8694s - 1.6412s, dur=0.7718s
+3 1.8694s - 2.6412s, dur=0.7718s
+4 2.8694s - 3.6412s, dur=0.7718s
+5 3.8694s - 4.6412s, dur=0.7718s
+6 4.8692s - 5.6410s, dur=0.7718s
+7 5.8692s - 6.6410s, dur=0.7718s
+8 6.8692s - 7.6410s, dur=0.7718s
+9 7.8692s - 8.6410s, dur=0.7718s
+10 8.8692s - 9.6410s, dur=0.7718s
+</pre>
+</div>
+
+>### **4.9 Gráficas**
+
+>#### **4.9.1 Gráfica con contracciones detectadas**
+
+Se genera una gráfica de la señal EMG completa en la que se pueden observar las contracciones detectadas. La señal se da en el eje tiempo-amplitud, y las regiones correspondientes a contracciones se muestran con color azul usando ``plt.axvspan()``. Esta representación permite identificar fácilmente cuándo y por cuánto tiempo se produce cada contracción dentro de la gráfica.
+
+```python
+plt.figure(figsize=(12,3))
+plt.plot(t, emg, label='EMG')
+
+for s,e in segs_merged: plt.axvspan(s/FS, e/FS, color='cyan', alpha=0.25)
+plt.title('EMG — detec. por derivada (suavizada)')
+plt.xlabel('Tiempo (s)')
+plt.ylabel('Amplitud')
+plt.legend()
+plt.tight_layout()
+plt.show()
+```
+<p align="center"><b>Gráfica</b></p>
+
+<img width="1254" height="393" alt="image" src="https://github.com/user-attachments/assets/97d9641c-38ef-4d7e-9d5d-18733a710c6e" />
+
+>#### **4.9.2Gráficas de contracciones**
+
+Para finalizar, el código extrae y grafica por separado cada contracción detectada. Para cada segmento, se obtiene la parte correspondiente de la señal original y se aplica nuevamente un suavizado para mejorar su apariencia visual. Luego, se muestra en una imagen independiente con su respectivo intervalo de tiempo y número de contracción. Esto permitio observar con mayor detalle la forma de cada contracción, su amplitud y duración, facilitando el análisis más preciso de las características electromiográficas.
+
+```python
+for i, (s, e) in enumerate(segs_merged):  # usa segs_rms_merged 
+    seg_t = t[s:e]
+    seg_y = emg[s:e]
+
+    smoothed = savgol_filter(seg_y, window_length=11, polyorder=3)
+
+    plt.figure(figsize=(6, 2))
+    plt.plot(seg_t, smoothed, color='darkorange')
+    plt.title(f'Contracción {i+1} — {seg_t[0]:.3f}s a {seg_t[-1]:.3f}s')
+    plt.xlabel('Tiempo (s)')
+    plt.ylabel('Amplitud (V)')
+    plt.tight_layout()
+    plt.show()
+```
+
+<p align="center"><b>Gráfica contracción 1</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/dac33dff-fa9c-4b58-aa43-10dd120375ab" />
+</p>
+
+<p align="center"><b>Gráfica contracción 2</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/871f57d6-f8ea-4d18-8b68-2f606575971e" />
+</p>
+
+<p align="center"><b>Gráfica contracción 3</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/9f9b9526-1096-44a7-bfe3-4b231f101365" />
+</p>
+
+<p align="center"><b>Gráfica contracción 4</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/48fd7d98-52ce-40f8-9113-d928d661e993" />
+</p>
+
+<p align="center"><b>Gráfica contracción 5</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/b73bfa91-e807-4c17-8217-13cb096ce28c" />
+</p>
+
+<p align="center"><b>Gráfica contracción 6</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/00572a87-00c8-4b15-8a45-e6c7bcafece9" />
+</p>
+
+<p align="center"><b>Gráfica contracción 7</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/a4c057ed-b3ca-4848-aae6-5f55bbaca522" />
+</p>
+
+<p align="center"><b>Gráfica contracción 8</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/7d2e3748-67ba-4162-9059-8550611abdeb" />
+</p>
+
+<p align="center"><b>Gráfica contracción 9</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/67b2f085-d597-40b5-b127-66845d377fbc" />
+</p>
+
+<p align="center"><b>Gráfica contracción 10</b></p>
+
+<p align="center">
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/7f105f3d-0338-42d5-9dad-d076541b8e09" />
+</p>
+
+## **5. Transformada de fourier: Frecuencia Media y Frecuencia Mediana**
+
+> ### **5.1 Inicialización de lista para los resultados**
+
+El código comienza creando dos listas vacías llamadas ``f_mean_list`` y ``f_median_list``, en las cuales se guardaran los valores de frecuencia media y frecuencia mediana de cada contracción muscular detectada. Estas listas permiten conservar los resultados obtenidos, para poder realizar la comparación entre contracciones.
+
+```python
+f_mean_list = []
+f_median_list = []
+```
+
+> ### **5.2 Toma de contracciones detectada**
+
+Se inicia un ciclo ``for`` que recorre las contracciones identificadas de la señal dentro del arreglo ``segs_merged``. En cada acción, se extrae cada contracción usando los índices ``s`` (inicio) y ``e`` (fin). Se define ``N`` como la cantidad total de muestras de ese segmento y ``T`` como el periodo de muestreo. De esta forma, el código analiza la información de cada contracción muscular por separado.
+
+```python
+for i, (s, e) in enumerate(segs_merged):
+    seg_y = emg[s:e]
+    N = len(seg_y)
+    T = 1 / FS
+```
+
+> ### **5.3 Vectores e inicio transformada de Fourier**
+
+En esta parte se crean los vectores k y n, que representan los índices de frecuencia y de tiempo necesarios para aplicar la definición matemática de la Transformada Discreta de Fourier.
+
+```python
+    # --- Transformada de Fourier (definición discreta) ---
+    k = np.arange(N)
+    n = np.arange(N)
+    X = np.zeros(N, dtype=complex)
+```
+
+> ### **5.4 Cálculo de la transformada de Fourier**
+
+Se realiza el cálculo directo de la transformada de Fourier mediante un bucle ``for``. Para cada frecuencia ``kk``, multiplicando los valores de la señal por un término exponencial complejo ``e^(-j2πkn/N)`` y sumando los resultados. Se toma únicamente la mitad positiva del espectro ya que el EMG, tiene simetría en frecuencia. Con np.linspace() se crea el eje de frecuencias f, y se calcula la densidad espectral.
+
+```python
+    # cálculo directo de la transformada de Fourier discreta
+    for kk in range(N):
+        X[kk] = np.sum(seg_y * np.exp(-1j * 2 * np.pi * kk * n / N))
+
+    # Solo tomamos la mitad positiva (simetría para señales)
+    f = np.linspace(0, FS/2, N//2)
+    Pxx = np.abs(X[:N//2])**2 / N
+```
+
+> ### **5.5 Gráfica de transformada (espectro)**
+
+El código grafica el espectro de potencia en función de la frecuencia para cada contracción muscular. En el gráfico, el eje horizontal representa las frecuencias en hertz, mientras que el eje vertical muestra la potencia relativa de la señal. Esta representación permite visualizar los picos dominantes en el espectro, verificar el rango de frecuencias activas durante la contracción y observar la distribución energética de la señal EMG, complementando el análisis numérico realizado anteriormente.
+
+```python
+    # --- Graficar espectro ---
+    plt.figure(figsize=(7,3))
+    plt.plot(f, Pxx, color='teal')
+    plt.title(f'Transformada de Fourier — Contracción {i+1}')
+    plt.xlabel('Frecuencia (Hz)')
+    plt.ylabel('Potencia relativa')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.show()
+```
+
+<p align="center"><b>Gráfica espectro 1</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/28b7b5ad-1b7b-4c68-acf9-0f9624a5a795" />
+</p>
+
+<p align="center"><b>Gráfica espectro 2</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/7b42aad1-d180-4180-9bd1-0a8b6bf20870" />
+</p>
+
+<p align="center"><b>Gráfica espectro 3</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/f5fefb25-78a0-458f-93ac-8660a9a43bac" />
+</p>
+
+<p align="center"><b>Gráfica espectro 4</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/bfb485a3-5886-4a2b-922b-f1351964daa6" />
+</p>
+
+<p align="center"><b>Gráfica espectro 5</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/cfd68349-8142-44fd-aebf-15aa151e8547" />
+</p>
+
+<p align="center"><b>Gráfica espectro 6</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/5c775a5e-5cce-484d-a749-f986958b7fe6" />
+</p>
+
+<p align="center"><b>Gráfica espectro 7</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/7485a640-784c-4ae5-8804-5cc56345cd0d" />
+</p>
+
+<p align="center"><b>Gráfica espectro 8</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/ba0a8885-883a-45d3-87fc-1375e2b44cb3" />
+</p>
+
+<p align="center"><b>Gráfica espectro 9</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/51033e44-00d6-42b8-bcc4-4ee7d7ffdd6d" />
+</p>
+
+<p align="center"><b>Gráfica espectro 10</b></p>
+
+<p align="center">
+<img width="690" height="290" alt="image" src="https://github.com/user-attachments/assets/c0c035bb-007c-423b-b4a0-d463bf881add" />
+</p>
+
+> ### **5.6 Cálculo de la frecuencia media y mediana**
+
+La frecuencia media ``(f_mean)`` se obtiene como el promedio ponderado de las frecuencias, lo que indica el centro de la transformada. La frecuencia mediana ``(f_median)`` se calcula como el punto donde la energía acumulada alcanza el 50% del total. Estos indicadores permiten evaluar el contenido frecuencial de la señal EMG.
+
+```python
+    # --- Calcular frecuencia media y mediana ---
+    f_mean = np.sum(f * Pxx) / np.sum(Pxx)
+    cumsum = np.cumsum(Pxx)
+    f_median = f[np.where(cumsum >= cumsum[-1]/2)[0][0]]
+
+    f_mean_list.append(f_mean)
+    f_median_list.append(f_median)
+```
+<h3 align="center">Resultados finales (frecuencia media y mediana)</h3>
+
+<div align="center">
+ 
+| Contracción | Frecuencia media (Hz) | Frecuencia mediana (Hz) |
+|:------------:|:--------------------:|:-----------------------:|
+| 1 | 35.71 | 3.86 |
+| 2 | 38.66 | 3.89 |
+| 3 | 38.32 | 3.89 |
+| 4 | 39.38 | 3.89 |
+| 5 | 39.34 | 3.89 |
+| 6 | 40.27 | 3.89 |
+| 7 | 39.04 | 3.89 |
+| 8 | 38.58 | 3.89 |
+| 9 | 38.36 | 3.89 |
+| 10 | 39.27 | 3.89 |
+
+</div>
+
+> ### **5.7 Gráfica evolución de las frecuencias**
+
+Se genera una gráfica que muestra cómo evolucionan las frecuencias media y mediana de la señal EMG a lo largo de las contracciones musculares obtenidas mediante la Transformada de Fourier. Se grafican dos curvas: una de color naranja que representa la frecuencia media y otra de color rojo que muestra la frecuencia mediana, ambas en función del número de contracción. Esto permite observar visualmente si hay variaciones o estabilidad en las frecuencias durante las contracciones.
+
+```python
+plt.figure(figsize=(8,4))
+plt.plot(range(1, len(f_mean_list)+1), f_mean_list, 'o-', color='orange', label='Frecuencia media')
+plt.plot(range(1, len(f_median_list)+1), f_median_list, 's-', color='red', label='Frecuencia mediana')
+plt.title('Evolución de las frecuencias (Transformada de Fourier)')
+plt.xlabel('Contracción')
+plt.ylabel('Frecuencia (Hz)')
+plt.ylim(0, 45)
+plt.legend()
+plt.grid(True)
+plt.tight_layout()
+plt.show()
+```
+
+<p align="center"><b>Gráfica</b></p>
+
+<p align="center">
+<img width="790" height="390" alt="image" src="https://github.com/user-attachments/assets/06cc20a6-83bb-4059-895e-a610ddaf0ad8" />
+</p>
+
+## **6. Análisis**
+
+A lo largo de las diez contracciones simuladas, se observa que la frecuencia media presenta valores entre 35,7 Hz y 40,3 Hz, mostrando un ligero incremento en las primeras contracciones y luego una tendencia a estabilizarse alrededor de los 39 Hz. Este comportamiento indica que, conforme avanza la serie de contracciones, el contenido espectral de la señal se mantiene dentro de un rango relativamente constante, lo que sugiere una actividad muscular simulada sin cambios significativos en la intensidad ni en la velocidad de las contracciones.
+
+Por otro lado, la frecuencia mediana permanece prácticamente constante en 3,89 Hz durante casi todas las contracciones, con una ligera variación inicial. Esta estabilidad refleja que la distribución de energía de la señal no experimenta desplazamientos notables hacia frecuencias más altas o más bajas. En conjunto, la constancia tanto de la frecuencia media como de la mediana sugiere que las contracciones simuladas son uniformes, sin signos de fatiga o variaciones en la respuesta del generador biológico utilizado para emular la señal EMG
+
 # **Parte B**
 ### 1. Registro Electromiográfico
 Para esta parte del laboratorio se registró la actividad electromiográfica (EMG) del músculo bíceps braquial durante contracciones repetidas hasta la fatiga. Los electrodos se ubicaron sobre el vientre muscular, siguiendo el eje de las fibras, mientras que el electrodo de referencia se colocó en una prominencia ósea del codo (epicóndilo lateral o proceso del olécranon), garantizando una señal estable y libre de interferencias.
