@@ -371,4 +371,60 @@ Sin embargo, conforme avanza el registro, ambas frecuencias tienden a disminuir 
 
 La diferencia entre las frecuencias media y mediana también se amplía en algunos tramos, lo que indica una redistribución asimétrica de la energía espectral hacia componentes de menor frecuencia, evidenciando un desplazamiento del contenido espectral típico de la fatiga. Así, la disminución sostenida de la frecuencia media y mediana constituye un marcador objetivo del proceso de fatiga, coherente con los patrones esperados en señales electromiográficas durante ejercicios de contracción repetitiva.
 
+### 4. Tendencia de la Frecuencia Media y Mediana 
+El siguiente bloque de código realiza la representación gráfica de la tendencia de la frecuencia media y mediana a lo largo de las contracciones musculares detectadas. Estos indicadores permiten observar la evolución espectral de la señal EMG, particularmente útil para evaluar la presencia de fatiga muscular, fenómeno que se manifiesta como una disminución progresiva de la frecuencia durante repeticiones continuas.
+
+```python
+if len(f_mean_list) > 1:
+    f_mean_arr = np.array(f_mean_list)
+    f_median_arr = np.array(f_median_list)
+    contracciones = np.arange(1, len(f_mean_arr) + 1)
+
+    slope_mean, intercept_mean, _, _, _ = linregress(contracciones, f_mean_arr)
+    slope_median, intercept_median, _, _, _ = linregress(contracciones, f_median_arr)
+
+    tend_mean = slope_mean * contracciones + intercept_mean
+    tend_median = slope_median * contracciones + intercept_median
+```
+En este bloque se convierten las listas ``f_mean_list`` y ``f_median_lis``t en arreglos numéricos (NumPy arrays) y se asocia cada valor con su respectiva contracción. Luego, mediante la función linregress, se calcula la pendiente (slope) y el intercepto de la recta de regresión lineal que modela la evolución de ambas frecuencias a lo largo del número de contracciones.
+
+Las pendientes obtenidas (``slope_mean`` y ``slope_median``) permiten cuantificar la dirección y magnitud del cambio espectral. Una pendiente negativa indica una reducción de la frecuencia conforme avanzan las contracciones, lo que se interpreta como progresión de la fatiga muscular, asociada al reclutamiento de fibras más lentas y a la disminución de la velocidad de conducción.
+
+Gráficamente, el código genera una figura donde se representan las frecuencias media y mediana por contracción, junto con sus respectivas rectas de tendencia (líneas punteadas). Esta visualización facilita la interpretación de los cambios en el dominio de la frecuencia y proporciona evidencia visual del fenómeno de fatiga.
+
+Finalmente, según los valores de las pendientes, se imprime una interpretación automática del resultado:
+
+* Si ambas pendientes son negativas, se confirma una tendencia decreciente clara, indicativa de fatiga progresiva.
+
+* Si solo una pendiente es negativa, se sugiere un inicio de fatiga incipiente.
+
+* Si ninguna presenta tendencia descendente, no se observa evidencia significativa de fatiga.
+  
+```python
+    print(f"\nPendiente frecuencia media: {slope_mean:.3f} Hz/contracción")
+    print(f"Pendiente frecuencia mediana: {slope_median:.3f} Hz/contracción")
+
+    if slope_mean < 0 and slope_median < 0:
+        print("\nAmbas frecuencias disminuyen con el número de contracciones → indica progresión de la fatiga muscular.")
+    elif slope_mean < 0 or slope_median < 0:
+        print("\n Solo una frecuencia muestra tendencia decreciente → posible inicio de fatiga.")
+    else:
+        print("\n No se observa tendencia descendente clara → no hay evidencia de fatiga significativa.")
+else:
+    print("\n Solo se detectó una contracción — no se puede analizar tendencia de frecuencia.")
+```
+
+En la ejecución del bloque anterior, se obtiene una pendiente negativa tanto para la frecuencia media como para la frecuencia mediana:
+
+Pendiente frecuencia media: −0.165 Hz/contracción
+Pendiente frecuencia mediana: −0.205 Hz/contracción
+
+Este comportamiento indica que, a medida que avanza el número de contracciones, ambas frecuencias disminuyen progresivamente, lo que se interpreta como una tendencia clara hacia la fatiga muscular.
+En términos fisiológicos, esta reducción refleja una disminución en la velocidad de conducción de las fibras musculares y una menor sincronización de las unidades motoras, efectos característicos del agotamiento progresivo durante esfuerzos repetitivos.
+
+<img width="889" height="490" alt="image" src="https://github.com/user-attachments/assets/36a12fb8-c395-4d42-b296-dfd803334c7f" />
+
+La visualización de las líneas de tendencia en la gráfica respalda este hallazgo, mostrando un descenso gradual de la frecuencia media y mediana a lo largo de la secuencia de contracciones, confirmando así el deterioro funcional asociado a la fatiga.
+
+
 # **Parte C**
