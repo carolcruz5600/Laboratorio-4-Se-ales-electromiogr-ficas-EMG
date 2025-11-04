@@ -298,10 +298,69 @@ Cada gráfico muestra el intervalo temporal y la variación de amplitud de la co
 <img width="537" height="205" alt="image" src="https://github.com/user-attachments/assets/17e6d0c3-eccf-48d8-94a2-fc596a2e4f80" />
 <img width="540" height="205" alt="image" src="https://github.com/user-attachments/assets/e7d0bfd7-dac5-4151-8cef-d3ea41faadef" />
 
-En las primeras cinco contracciones (60–66 s aproximadamente), la señal EMG exhibe mayor estabilidad temporal y menor variabilidad en amplitud. Las formas de onda presentan morfología definida con transiciones suaves, reflejando una actividad muscular controlada en ausencia de fatiga significativa. Las amplitudes pico a pico son moderadas y relativamente simétricas respecto al eje de referencia, mientras que la densidad de oscilaciones es reducida, sugiriendo contracciones eficientes con bajo contenido de ruido fisiológico.
+En las primeras cinco contracciones (``60–66 s`` aproximadamente), la señal EMG exhibe mayor estabilidad temporal y menor variabilidad en amplitud. Las formas de onda presentan morfología definida con transiciones suaves, reflejando una actividad muscular controlada en ausencia de fatiga significativa. Las amplitudes pico a pico son moderadas y relativamente simétricas respecto al eje de referencia, mientras que la densidad de oscilaciones es reducida, sugiriendo contracciones eficientes con bajo contenido de ruido fisiológico.
 
-Por el contrario, las últimas cinco contracciones (266–270 s aproximadamente) muestran marcada irregularidad morfológica. Se evidencian picos más abruptos, fluctuaciones asimétricas y un incremento considerable en la amplitud de la señal, particularmente en las contracciones 112 y 115. Este patrón es consistente con los cambios electromiográficos característicos de la fatiga muscular, donde el aumento de amplitud y la pérdida de consistencia temporal se asocian con la desincronización progresiva de las unidades motoras y el reclutamiento de fibras musculares adicionales para compensar la pérdida de fuerza.
+Por el contrario, las últimas cinco contracciones (``266–270 s`` aproximadamente) muestran marcada irregularidad morfológica. Se evidencian picos más abruptos, fluctuaciones asimétricas y un incremento considerable en la amplitud de la señal, particularmente en las contracciones 112 y 115. Este patrón es consistente con los cambios electromiográficos característicos de la fatiga muscular, donde el aumento de amplitud y la pérdida de consistencia temporal se asocian con la desincronización progresiva de las unidades motoras y el reclutamiento de fibras musculares adicionales para compensar la pérdida de fuerza.
 
 Adicionalmente, la dispersión en la morfología de las últimas contracciones revela una mayor variabilidad inter-evento, atribuible tanto a fluctuaciones en la fuerza aplicada como a la degradación de la eficiencia neuromuscular conforme avanza el protocolo de fatiga. Esta evolución en las características de la señal confirma la transición desde un estado de contracción óptima hacia un estado de fatiga muscular manifiesta. En conjunto, este procedimiento ofrece una visión detallada del comportamiento electromiográfico durante el desarrollo de la fatiga, complementando los análisis numéricos realizados previamente.
+
+### **4. Cálculo de Frecuencia Media y Mediana por Contracción **
+La  Frecuencia Media y Mediana representan la distribución de energía en el dominio de la frecuencia: la frecuencia media indica el centro de gravedad del espectro de potencia, mientras que la frecuencia mediana corresponde al punto que divide la energía espectral acumulada en dos mitades iguales. Ambos parámetros son indicadores clave del estado fisiológico del músculo, debido a que su desplazamiento hacia frecuencias más bajas suele asociarse con la fatiga muscular o con una reducción en la velocidad de conducción de las fibras.
+
+El siguiente fragmento de código calcula la frecuencia media y frecuencia mediana de cada contracción muscular detectada.
+
+```python
+f_mean_list = []
+f_median_list = []
+
+for i, (s, e) in enumerate(filtered_segs):
+    seg_y = emg[s:e]
+
+    N = len(seg_y)
+    if N < 10:
+        continue  # descarta segmentos muy cortos
+
+    Y = np.fft.rfft(seg_y)
+    Pxx = np.abs(Y)**2 / N
+    f = np.fft.rfftfreq(N, 1 / FS)
+
+    f_mean = np.sum(f * Pxx) / np.sum(Pxx)
+    cumsum = np.cumsum(Pxx)
+    f_median = f[np.where(cumsum >= cumsum[-1] / 2)[0][0]]
+
+    f_mean_list.append(f_mean)
+    f_median_list.append(f_median)
+
+    print(f"\nContracción {i+1}:")
+    print(f"  Frecuencia media  = {f_mean:.2f} Hz")
+    print(f"  Frecuencia mediana = {f_median:.2f} Hz")
+```
+En el código, se itera sobre cada contracción identificada en la lista filtered_segs, extrayendo su correspondiente porción de la señal ``(seg_y)``. Para cada segmento se calcula la Transformada Rápida de Fourier (FFT), a partir de la cual se obtiene el espectro de potencia ``(Pxx = |Y|² / N)``, que refleja la energía distribuida a lo largo de las distintas frecuencias. A partir de este espectro se determina la frecuencia media mediante un promedio ponderado ``(np.sum(f * Pxx) / np.sum(Pxx))``, y la frecuencia mediana se calcula identificando el punto en el que la energía acumulada alcanza la mitad del total ``(np.cumsum(Pxx))``. Los valores resultantes se almacenan en las listas ``f_mean_list y f_median_list``, respectivamente, permitiendo analizar la evolución de ambas métricas a lo largo del registro.
+
+> [!NOTE]
+> Dado que el registro completo contiene un total de 116 contracciones musculares detectadas, se seleccionaron únicamente las cinco primeras y las cinco últimas para su presentación y análisis comparativo. Esta selección representa de manera sintética la evolución temporal del comportamiento electromiográfico, evitando una sobrecarga visual de información.
+
+>### Tabla Frecuencia Media y Mediana
+
+| Contracción | Frecuencia media (Hz) | Frecuencia mediana (Hz) |
+| :---------: | :-------------------: | :---------------------: |
+|      1      |         123.67        |          88.24          |
+|      2      |         116.40        |          57.54          |
+|      3      |         106.56        |          57.92          |
+|      4      |         124.84        |          71.77          |
+|      5      |         100.12        |          47.77          |
+|     ...     |          ...          |           ...           |
+|     112     |         81.25         |          34.25          |
+|     113     |         110.54        |          61.81          |
+|     114     |         75.18         |          38.01          |
+|     115     |         77.27         |          28.17          |
+|     116     |         93.97         |          54.55          |
+
+
+A partir del cálculo de la frecuencia media y mediana para las 116 contracciones detectadas, se observa una variabilidad significativa en la distribución de energía espectral entre los distintos eventos musculares. Las primeras contracciones muestran valores más elevados de frecuencia media (en torno a ``120–140 Hz``) y mediana (entre ``80–100 Hz``), lo cual refleja una mayor actividad de fibras rápidas y una eficiente conducción de los potenciales de acción musculares.
+
+Sin embargo, conforme avanza el registro, ambas frecuencias tienden a disminuir progresivamente, alcanzando valores medios más bajos (entre ``80–100 Hz`` para la frecuencia media y 40–60 Hz para la mediana). Este descenso es característico de la aparición de fatiga muscular, fenómeno asociado a la reducción en la velocidad de conducción de las fibras, al aumento de la sincronización de unidades motoras y al predominio de fibras lentas de tipo I durante los periodos prolongados de esfuerzo.
+
+La diferencia entre las frecuencias media y mediana también se amplía en algunos tramos, lo que indica una redistribución asimétrica de la energía espectral hacia componentes de menor frecuencia, evidenciando un desplazamiento del contenido espectral típico de la fatiga. Así, la disminución sostenida de la frecuencia media y mediana constituye un marcador objetivo del proceso de fatiga, coherente con los patrones esperados en señales electromiográficas durante ejercicios de contracción repetitiva.
 
 # **Parte C**
