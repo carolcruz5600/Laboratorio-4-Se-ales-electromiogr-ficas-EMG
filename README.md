@@ -350,6 +350,23 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 |     115     |         77.27         |          28.17          |
 |     116     |         93.97         |          54.55          |
 
+>### Cálculo y Gráfica Transformada de Fourier
+>### Primeras 5 Contracciones
+<img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/376e2e7e-cd9e-404c-977b-55660ed9313a" />
+<img width="589" height="190" alt="image" src="https://github.com/user-attachments/assets/205b330e-df1a-4bae-aee9-194cb4b5ad51" />
+<img width="598" height="190" alt="image" src="https://github.com/user-attachments/assets/3490fa6a-0386-4a4f-9d65-c909b54d8987" />
+<img width="590" height="190" alt="image" src="https://github.com/user-attachments/assets/ec1a69bd-e2a0-4b84-88ad-4e61e993be83" />
+<img width="572" height="190" alt="image" src="https://github.com/user-attachments/assets/887d463e-2d9f-40ca-886d-5e8e0d0dcec4" />
+
+>### Últimas 5 Contracciones
+<img width="572" height="190" alt="image" src="https://github.com/user-attachments/assets/60519fcc-5bb5-441a-a210-2aae19a6bf00" />
+<img width="572" height="190" alt="image" src="https://github.com/user-attachments/assets/9ef4d1c2-6e79-4983-89ef-3e5077314d61" />
+<img width="589" height="190" alt="image" src="https://github.com/user-attachments/assets/834efe64-a1e4-4450-9125-5669a44b0d33" />
+<img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/a98b524f-c1c3-436f-96a4-3566f1585349" />
+<img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/38e8ec74-1d4b-4e23-806d-387f414c7331" />
+
+
+
 >### Análisis
 
 A partir del cálculo de la frecuencia media y mediana para las 116 contracciones detectadas, se observa una variabilidad significativa en la distribución de energía espectral entre los distintos eventos musculares. Las primeras contracciones muestran valores más elevados de frecuencia media (en torno a ``120–140 Hz``) y mediana (entre ``80–100 Hz``), lo cual refleja una mayor actividad de fibras rápidas y una eficiente conducción de los potenciales de acción musculares.
