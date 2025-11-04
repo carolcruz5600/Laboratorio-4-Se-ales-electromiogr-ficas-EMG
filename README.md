@@ -216,7 +216,7 @@ noise_std = mad / 0.6745
 p2p_thresh = P2P_MULT_NOISE * noise_std
 rms_thresh = RMS_MULT_NOISE * noise_std
 ```
-Este bloque calcula el residuo entre la señal original y su versión suavizada mediante el filtro de Savitzky–Golay, estimando la desviación estándar del ruido (noise_std) a partir de la mediana de las desviaciones absolutas (MAD). Con ello se definen los umbrales mínimos de amplitud pico a pico ``(p2p_thresh)`` y de energía RMS ``(rms_thresh)``, que sirven como referencia para descartar eventos de baja intensidad no asociados a verdadera actividad muscular.
+Este bloque calcula el residuo entre la señal original y su versión suavizada mediante el filtro de *Savitzky–Golay*, estimando la desviación estándar del ruido ``(noise_std)`` a partir de la mediana de las desviaciones absolutas (MAD). Con ello se definen los umbrales mínimos de amplitud pico a pico ``(p2p_thresh)`` y de energía RMS ``(rms_thresh)``, que sirven como referencia para descartar eventos de baja intensidad no asociados a verdadera actividad muscular.
 
 >### 3.5. Filtrado final de contracciones válidas
 
@@ -291,6 +291,8 @@ Cada gráfico muestra el intervalo temporal y la variación de amplitud de la co
 <img width="537" height="205" alt="image" src="https://github.com/user-attachments/assets/17e6d0c3-eccf-48d8-94a2-fc596a2e4f80" />
 <img width="540" height="205" alt="image" src="https://github.com/user-attachments/assets/e7d0bfd7-dac5-4151-8cef-d3ea41faadef" />
 
+>### Análisis
+
 En las primeras cinco contracciones (``60–66 s`` aproximadamente), la señal EMG exhibe mayor estabilidad temporal y menor variabilidad en amplitud. Las formas de onda presentan morfología definida con transiciones suaves, reflejando una actividad muscular controlada en ausencia de fatiga significativa. Las amplitudes pico a pico son moderadas y relativamente simétricas respecto al eje de referencia, mientras que la densidad de oscilaciones es reducida, sugiriendo contracciones eficientes con bajo contenido de ruido fisiológico.
 
 Por el contrario, las últimas cinco contracciones (``266–270 s`` aproximadamente) muestran marcada irregularidad morfológica. Se evidencian picos más abruptos, fluctuaciones asimétricas y un incremento considerable en la amplitud de la señal, particularmente en las contracciones 112 y 115. Este patrón es consistente con los cambios electromiográficos característicos de la fatiga muscular, donde el aumento de amplitud y la pérdida de consistencia temporal se asocian con la desincronización progresiva de las unidades motoras y el reclutamiento de fibras musculares adicionales para compensar la pérdida de fuerza.
@@ -350,6 +352,7 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 |     115     |         77.27         |          28.17          |
 |     116     |         93.97         |          54.55          |
 
+>### Análisis
 
 A partir del cálculo de la frecuencia media y mediana para las 116 contracciones detectadas, se observa una variabilidad significativa en la distribución de energía espectral entre los distintos eventos musculares. Las primeras contracciones muestran valores más elevados de frecuencia media (en torno a ``120–140 Hz``) y mediana (entre ``80–100 Hz``), lo cual refleja una mayor actividad de fibras rápidas y una eficiente conducción de los potenciales de acción musculares.
 
