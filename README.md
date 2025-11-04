@@ -54,4 +54,22 @@ El bíceps braquial fue elegido por su fácil acceso, su papel definido en la fl
 
 Durante el protocolo, el voluntario realizó contracciones repetidas hasta la fatiga, definida como la incapacidad de mantener el nivel de fuerza requerido o continuar con las contracciones, permitiendo así, observar las características típicas de la fatiga muscular en la señal EMG.
 
+### **1. Filtro Pasa Banda (20 - 450 Hz)**
+Para la implementación en *Google Colab*, en primera instancia se cargaron los archivos *.txt* en la unidad de Drive para posteriormente ser leídos desde el entorno. La vinculación del Drive se realizó de la siguiente manera:
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+La lectura de los datos electromiográficos se efectuó mediante la apertura directa del archivo de texto, convirtiendo cada línea en un valor numérico tipo *float*. El siguiente fragmento muestra la sintaxis utilizada:
+
+```python
+# Cargar señal
+camino2 = '/content/drive/MyDrive/Colab Notebooks/Lab Procesamiento Digital de Señales/PDS - Lab 4/Paciente EMG5000.txt'
+
+with open(camino2, 'r') as f:
+    emg_paciente = [float(line) for line in f if line.strip()]
+```
+Este procedimiento permite importar los registros de la señal EMG almacenados en formato *.txt*, generando un vector de datos listo para su posterior procesamiento.
+
 # **Parte C**
