@@ -148,8 +148,6 @@ RMS_MULT_NOISE = 2.0
 
 En esta sección se establecen los parámetros globales que controlan la detección de contracciones musculares. Se define la frecuencia de muestreo ``(FS = 1000 Hz)``, la duración mínima de una contracción ``(20 ms)`` y los criterios de suavizado mediante el filtro de *Savitzky–Golay* ``(SG_WIN, SG_POLY)``. Los multiplicadores de desviación estándar ``(DERIV_STD_MULT)`` y de energía ``(P2P_MULT_NOISE, RMS_MULT_NOISE)`` permiten ajustar la sensibilidad del algoritmo, asegurando que solo se detecten eventos con amplitud y duración características de verdaderas contracciones musculares.
 
-<br>
-
 >### 3.2. Carga de señal y preprocesamiento
 
 La señal filtrada previamente se copia en una nueva variable para el análisis. Posteriormente, se aplica un suavizado Savitzky–Golay, que reduce pequeñas oscilaciones y ruido sin alterar la forma general de la señal.
@@ -162,8 +160,6 @@ smoothed = savgol_filter(emg, SG_WIN, SG_POLY)
 deriv = np.gradient(smoothed) * FS
 ```
 
-<br>
-
 >### 3.3. Detección inicial de eventos
 Se establecieron umbrales positivo y negativo sobre la derivada de la señal, calculados a partir de la media y desviación estándar de la misma. Los puntos donde la derivada supera el umbral positivo se identifican como inicios de contracción muscular (onsets), mientras que aquellos que descienden por debajo del umbral negativo corresponden a los finales de contracción (offsets). Este criterio basado en la variación temporal de la señal permite delimitar de manera objetiva los segmentos de actividad muscular, diferenciándolos de los periodos de reposo y facilitando la segmentación automática de las contracciones registradas. El siguiente fragmento muestra la sintaxis utilizada:
 
@@ -173,7 +169,6 @@ sigma = np.std(deriv)
 thr_pos = mu + DERIV_STD_MULT * sigma
 thr_neg = mu - DERIV_STD_MULT * sigma
 ```
-<br>
 
 >### 3.4. Emparejamiento y consolidación de contracciones
 
@@ -225,8 +220,6 @@ rms_thresh = RMS_MULT_NOISE * noise_std
 ```
 Este bloque calcula el residuo entre la señal original y su versión suavizada mediante el filtro de *Savitzky–Golay*, estimando la desviación estándar del ruido ``(noise_std)`` a partir de la mediana de las desviaciones absolutas (MAD). Con ello se definen los umbrales mínimos de amplitud pico a pico ``(p2p_thresh)`` y de energía RMS ``(rms_thresh)``, que sirven como referencia para descartar eventos de baja intensidad no asociados a verdadera actividad muscular.
 
-<br>
-
 >### 3.5. Filtrado final de contracciones válidas
 
 ```python
@@ -244,8 +237,6 @@ for s, e in segs_merged:
 Dentro del ciclo ``for s, e in segs_merged``, se analiza cada intervalo fusionado extrayendo la porción correspondiente de la señal EMG y calculando sus características principales: amplitud pico a pico (diferencia entre valores máximo y mínimo), valor RMS (energía media del segmento) y duración en segundos. Estos indicadores permiten evaluar la intensidad y extensión temporal de cada contracción.
 
 Posteriormente, se validaron las contracciones mediante tres criterios de aceptación: (1) duración mínima suficiente para descartar artefactos transitorios, (2) amplitud pico a pico significativa que refleje activación muscular genuina y (3) energía RMS superior al nivel de ruido basal. Únicamente las contracciones que satisfacen simultáneamente estos requisitos se conservan como eventos válidos, garantizando la exclusión de falsas detecciones. El conjunto ``filtered_segs`` reúne así los intervalos correspondientes a activaciones musculares reales, proporcionando una base confiable para el análisis cuantitativo y temporal posterior.
-
-<br>
 
 >### 3.6. Visualización de resultados
 
