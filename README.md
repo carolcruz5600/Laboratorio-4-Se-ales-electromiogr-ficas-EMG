@@ -185,7 +185,7 @@ while i < len(onsets_idx) and i < len(offsets_idx):
 ```
 En este bloque se construye la lista inicial de segmentos de activación muscular a partir de los índices de inicio ``(onsets_idx)`` y final ``(offsets_idx)`` detectados previamente. Para cada evento, el código busca el primer punto de finalización posterior al inicio y calcula la duración del intervalo en número de muestras. Solo aquellos tramos cuya longitud supera un umbral mínimo ``(min_samples)`` son considerados válidos, con el fin de eliminar artefactos breves o fluctuaciones no representativas. El resultado es una lista segments que agrupa las posibles contracciones registradas en la señal EMG.
 
-A continuación, se ejecuta la función ``merge_segments``, que fusiona los intervalos cercanos entre sí dentro de una separación máxima definida por ``MERGE_GAP_S``. Este proceso evita que una misma contracción muscular, que puede presentar leves interrupciones en la señal, sea contabilizada como múltiples eventos separados. De esta manera, los segmentos contiguos que se encuentran a una distancia menor al umbral especificado ``(gap_samples)`` se combinan en uno solo, obteniendo un conjunto de segmentos unificados ``(segs_merged)`` que representan contracciones completas y continuas.
+El siguiente bloque de código implementa la función encargada de fusionar los segmentos de activación que se encuentran separados por intervalos muy cortos, unificando así contracciones continuas que pudieron haber sido divididas por pausas breves en la señal:
 
 ```python
 # ---------- Merge ----------
@@ -204,6 +204,7 @@ def merge_segments(segs, gap_samples):
 
 segs_merged = merge_segments(segments, int(round(MERGE_GAP_S * FS)))
 ```
+En ese fragmento de código se ejecuta la función ``merge_segments``, que fusiona los intervalos cercanos entre sí dentro de una separación máxima definida por ``MERGE_GAP_S``. Este proceso evita que una misma contracción muscular, que puede presentar leves interrupciones en la señal, sea contabilizada como múltiples eventos separados. De esta manera, los segmentos contiguos que se encuentran a una distancia menor al umbral especificado ``(gap_samples)`` se combinan en uno solo, obteniendo un conjunto de segmentos unificados ``(segs_merged)`` que representan contracciones completas y continuas.
 
 Dentro del recorrido ``for s, e in segs_merged``, el algoritmo analiza cada uno de los intervalos previamente fusionados. Para cada segmento, se extrae la porción correspondiente de la señal EMG y se calculan sus principales características: la amplitud pico a pico, que representa la diferencia entre los valores máximo y mínimo dentro del intervalo; el valor RMS, que cuantifica la energía media del segmento; y su duración, expresada en segundos a partir del número de muestras. Estos indicadores permiten evaluar la intensidad y extensión temporal de la contracción.
 
@@ -211,7 +212,7 @@ A partir de ellos, se aplican los criterios definidos para conservar únicamente
 
 Esta etapa constituye el filtro más selectivo del procedimiento, teniendo en cuenta que descarta falsas contracciones generadas por picos aislados o variaciones menores en la señal, garantizando que las detecciones correspondan efectivamente a eventos musculares reales. El resultado es una delimitación precisa de las contracciones, condición esencial para el análisis posterior de la evolución temporal y espectral de la señal EMG.
 
-Posteriormente, se realiza la estimación del nivel de ruido, mediante el siguiente código: 
+Posteriormente, se realiza la estimación del nivel de ruido, mediante el siguiente fragmento de código: 
 
 ```python
 residual = emg - savgol_filter(emg, 1001 if len(emg)>1001 else SG_WIN, SG_POLY)
@@ -297,5 +298,10 @@ Cada gráfico muestra el intervalo temporal y la variación de amplitud de la co
 <img width="537" height="205" alt="image" src="https://github.com/user-attachments/assets/17e6d0c3-eccf-48d8-94a2-fc596a2e4f80" />
 <img width="540" height="205" alt="image" src="https://github.com/user-attachments/assets/e7d0bfd7-dac5-4151-8cef-d3ea41faadef" />
 
-En conjunto, este procedimiento ofrece una visión clara y detallada del comportamiento electromiográfico durante el desarrollo de la fatiga, complementando los análisis numéricos realizados previamente.
+En las primeras cinco contracciones (60–66 s aproximadamente), la señal EMG exhibe mayor estabilidad temporal y menor variabilidad en amplitud. Las formas de onda presentan morfología definida con transiciones suaves, reflejando una actividad muscular controlada en ausencia de fatiga significativa. Las amplitudes pico a pico son moderadas y relativamente simétricas respecto al eje de referencia, mientras que la densidad de oscilaciones es reducida, sugiriendo contracciones eficientes con bajo contenido de ruido fisiológico.
+
+Por el contrario, las últimas cinco contracciones (266–270 s aproximadamente) muestran marcada irregularidad morfológica. Se evidencian picos más abruptos, fluctuaciones asimétricas y un incremento considerable en la amplitud de la señal, particularmente en las contracciones 112 y 115. Este patrón es consistente con los cambios electromiográficos característicos de la fatiga muscular, donde el aumento de amplitud y la pérdida de consistencia temporal se asocian con la desincronización progresiva de las unidades motoras y el reclutamiento de fibras musculares adicionales para compensar la pérdida de fuerza.
+
+Adicionalmente, la dispersión en la morfología de las últimas contracciones revela una mayor variabilidad inter-evento, atribuible tanto a fluctuaciones en la fuerza aplicada como a la degradación de la eficiencia neuromuscular conforme avanza el protocolo de fatiga. Esta evolución en las características de la señal confirma la transición desde un estado de contracción óptima hacia un estado de fatiga muscular manifiesta. En conjunto, este procedimiento ofrece una visión detallada del comportamiento electromiográfico durante el desarrollo de la fatiga, complementando los análisis numéricos realizados previamente.
+
 # **Parte C**
