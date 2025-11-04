@@ -385,16 +385,6 @@ if len(f_mean_list) > 1:
 En este bloque se convierten las listas ``f_mean_list`` y ``f_median_lis``t en arreglos numéricos (NumPy arrays) y se asocia cada valor con su respectiva contracción. Luego, mediante la función linregress, se calcula la pendiente (slope) y el intercepto de la recta de regresión lineal que modela la evolución de ambas frecuencias a lo largo del número de contracciones.
 
 Las pendientes obtenidas (``slope_mean`` y ``slope_median``) permiten cuantificar la dirección y magnitud del cambio espectral. Una pendiente negativa indica una reducción de la frecuencia conforme avanzan las contracciones, lo que se interpreta como progresión de la fatiga muscular, asociada al reclutamiento de fibras más lentas y a la disminución de la velocidad de conducción.
-
-Gráficamente, el código genera una figura donde se representan las frecuencias media y mediana por contracción, junto con sus respectivas rectas de tendencia (líneas punteadas). Esta visualización facilita la interpretación de los cambios en el dominio de la frecuencia y proporciona evidencia visual del fenómeno de fatiga.
-
-Finalmente, según los valores de las pendientes, se imprime una interpretación automática del resultado:
-
-* Si ambas pendientes son negativas, se confirma una tendencia decreciente clara, indicativa de fatiga progresiva.
-
-* Si solo una pendiente es negativa, se sugiere un inicio de fatiga incipiente.
-
-* Si ninguna presenta tendencia descendente, no se observa evidencia significativa de fatiga.
   
 ```python
     print(f"\nPendiente frecuencia media: {slope_mean:.3f} Hz/contracción")
@@ -409,14 +399,20 @@ Finalmente, según los valores de las pendientes, se imprime una interpretación
 else:
     print("\n Solo se detectó una contracción — no se puede analizar tendencia de frecuencia.")
 ```
+Gráficamente, el código genera una figura donde se representan las frecuencias media y mediana por contracción, junto con sus respectivas rectas de tendencia (líneas punteadas). Esta visualización facilita la interpretación de los cambios en el dominio de la frecuencia y proporciona evidencia visual del fenómeno de fatiga.
 
+Finalmente, según los valores de las pendientes, se imprime una interpretación automática del resultado:
+
+* Si ambas pendientes son negativas, se confirma una tendencia decreciente clara, indicativa de fatiga progresiva.
+* Si solo una pendiente es negativa, se sugiere un inicio de fatiga incipiente.
+* Si ninguna presenta tendencia descendente, no se observa evidencia significativa de fatiga.
+  
 En la ejecución del bloque anterior, se obtiene una pendiente negativa tanto para la frecuencia media como para la frecuencia mediana:
 
-Pendiente frecuencia media: −0.165 Hz/contracción
-Pendiente frecuencia mediana: −0.205 Hz/contracción
+* Pendiente frecuencia media: −0.165 Hz/contracción
+* Pendiente frecuencia mediana: −0.205 Hz/contracción
 
-Este comportamiento indica que, a medida que avanza el número de contracciones, ambas frecuencias disminuyen progresivamente, lo que se interpreta como una tendencia clara hacia la fatiga muscular.
-En términos fisiológicos, esta reducción refleja una disminución en la velocidad de conducción de las fibras musculares y una menor sincronización de las unidades motoras, efectos característicos del agotamiento progresivo durante esfuerzos repetitivos.
+Este comportamiento indica que, a medida que avanza el número de contracciones, ambas frecuencias disminuyen progresivamente, lo que se interpreta como una tendencia clara hacia la fatiga muscular. En términos fisiológicos, esta reducción refleja una disminución en la velocidad de conducción de las fibras musculares y una menor sincronización de las unidades motoras, efectos característicos del agotamiento progresivo durante esfuerzos repetitivos.
 
 <img width="889" height="490" alt="image" src="https://github.com/user-attachments/assets/36a12fb8-c395-4d42-b296-dfd803334c7f" />
 
