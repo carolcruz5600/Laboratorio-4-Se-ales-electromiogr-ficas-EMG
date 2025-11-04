@@ -282,7 +282,20 @@ for i,(s,e) in enumerate(filtered_segs):
 El código recorre los intervalos previamente aceptados ``(filtered_segs)``, extrae el segmento correspondiente de la señal y aplica nuevamente un suavizado local mediante el *filtro de Savitzky–Golay*, con el fin de resaltar la forma general de la contracción y atenuar pequeñas oscilaciones de alta frecuencia. 
 
 Cada gráfico muestra el intervalo temporal y la variación de amplitud de la contracción, lo que permite realizar un análisis comparativo entre eventos sucesivos.Dado que el algoritmo detectó un total de 116 contracciones válidas, para efectos de visualización se presentan únicamente las cinco primeras y las cinco últimas contracciones. Esta selección ilustra de manera representativa la evolución de la señal a lo largo del registro, destacando cómo hacia las etapas finales de fatiga se observan mayores amplitudes e irregularidades en la forma de onda, reflejo del incremento en la activación de unidades motoras y de la pérdida de estabilidad muscular.
+
+>### Primeras 5 Contracciones
 <img width="545" height="205" alt="image" src="https://github.com/user-attachments/assets/f44cf6dc-808e-45a6-a8fc-471a9d612510" />
+<img width="552" height="205" alt="image" src="https://github.com/user-attachments/assets/9683e125-1e83-41fb-a2eb-24d055ae494c" />
+<img width="527" height="205" alt="image" src="https://github.com/user-attachments/assets/35e00e7e-7de2-4b17-afac-08703f13132e" />
+<img width="527" height="205" alt="image" src="https://github.com/user-attachments/assets/a801c7a7-87e1-44ea-8a87-44c783298534" />
+<img width="529" height="205" alt="image" src="https://github.com/user-attachments/assets/3bbd1d28-d840-4fb3-b025-f25aa075dd80" />
+
+>### Últimas 5 Contracciones
+<img width="545" height="205" alt="image" src="https://github.com/user-attachments/assets/8bddfbbf-299c-4caf-b573-dcbf843a4a80" />
+<img width="527" height="205" alt="image" src="https://github.com/user-attachments/assets/f15aa274-5fd5-46a0-a169-5679fe25644c" />
+<img width="540" height="205" alt="image" src="https://github.com/user-attachments/assets/fc1ad60f-db6b-48ca-bdcf-f4f25cf8a4a4" />
+<img width="537" height="205" alt="image" src="https://github.com/user-attachments/assets/17e6d0c3-eccf-48d8-94a2-fc596a2e4f80" />
+<img width="540" height="205" alt="image" src="https://github.com/user-attachments/assets/e7d0bfd7-dac5-4151-8cef-d3ea41faadef" />
 
 En conjunto, este procedimiento ofrece una visión clara y detallada del comportamiento electromiográfico durante el desarrollo de la fatiga, complementando los análisis numéricos realizados previamente.
 # **Parte C**
