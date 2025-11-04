@@ -418,5 +418,13 @@ Este comportamiento indica que, a medida que avanza el número de contracciones,
 
 La visualización de las líneas de tendencia en la gráfica respalda este hallazgo, mostrando un descenso gradual de la frecuencia media y mediana a lo largo de la secuencia de contracciones, confirmando así el deterioro funcional asociado a la fatiga.
 
+### 5. Relación entre los cambios de frecuencia y la fisiología de la fatiga muscular
+Los resultados obtenidos muestran una **tendencia decreciente** tanto en la frecuencia media ``(−0.165 Hz/contracción)`` como en la frecuencia mediana ``(−0.205 Hz/contracción)`` a lo largo de las contracciones analizadas. Este comportamiento es un indicador clásico de la progresión de la fatiga muscular, fenómeno que se manifiesta en el dominio de la frecuencia del electromiograma (EMG) como un desplazamiento del espectro hacia valores más bajos.
+
+Desde el punto de vista fisiológico, este descenso en la frecuencia está asociado principalmente a la **disminución de la velocidad** de conducción de las fibras musculares, consecuencia de la acumulación de metabolitos como el lactato, el ion hidrógeno (H⁺) y el fosfato inorgánico durante contracciones sostenidas o repetitivas. Estos subproductos alteran el equilibrio iónico y reducen la eficiencia del acoplamiento excitación-contracción, generando una transmisión más lenta del potencial de acción a lo largo de la fibra.
+
+Asimismo, la fatiga produce una **pérdida gradual de la sincronización y el reclutamiento eficiente de las unidades motoras**, lo que contribuye a la **disminución de la potencia espectral** en las frecuencias altas. En conjunto, estos efectos se reflejan en la reducción progresiva de la frecuencia media y mediana del EMG, tal como se observó en el análisis, evidenciando un deterioro funcional en la capacidad contráctil del músculo.
+
+En síntesis, la disminución de las componentes de alta frecuencia constituye un marcador cuantitativo de la fatiga muscular, permitiendo relacionar las variaciones del espectro de la señal EMG con los mecanismos fisiológicos subyacentes al agotamiento del tejido muscular.
 
 # **Parte C**
