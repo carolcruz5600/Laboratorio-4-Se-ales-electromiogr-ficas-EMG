@@ -236,7 +236,12 @@ for s, e in segs_merged:
 
 Dentro del ciclo ``for s, e in segs_merged``, se analiza cada intervalo fusionado extrayendo la porción correspondiente de la señal EMG y calculando sus características principales: amplitud pico a pico (diferencia entre valores máximo y mínimo), valor RMS (energía media del segmento) y duración en segundos. Estos indicadores permiten evaluar la intensidad y extensión temporal de cada contracción.
 
-Posteriormente, se validaron las contracciones mediante tres criterios de aceptación: (1) duración mínima suficiente para descartar artefactos transitorios, (2) amplitud pico a pico significativa que refleje activación muscular genuina y (3) energía RMS superior al nivel de ruido basal. Únicamente las contracciones que satisfacen simultáneamente estos requisitos se conservan como eventos válidos, garantizando la exclusión de falsas detecciones. El conjunto ``filtered_segs`` reúne así los intervalos correspondientes a activaciones musculares reales, proporcionando una base confiable para el análisis cuantitativo y temporal posterior.
+Posteriormente, se validaron las contracciones mediante tres criterios de aceptación: 
+1. duración mínima suficiente para descartar artefactos transitorios
+2. Amplitud pico a pico significativa que refleje activación muscular genuina
+3. energía RMS superior al nivel de ruido basal.
+
+Únicamente las contracciones que satisfacen simultáneamente estos requisitos se conservan como eventos válidos, garantizando la exclusión de falsas detecciones. El conjunto ``filtered_segs`` reúne así los intervalos correspondientes a activaciones musculares reales, proporcionando una base confiable para el análisis cuantitativo y temporal posterior.
 
 >### 3.6. Visualización de resultados
 
@@ -351,6 +356,31 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 |     116     |         93.97         |          54.55          |
 
 >### Cálculo y Gráfica Transformada de Fourier
+El siguiente fragmento de código implementa el cálculo explícito de la *Transformada Discreta de Fourier (DFT)* de cada segmento de señal EMG. A diferencia de la función np.fft —que utiliza algoritmos rápidos (FFT)—, en este caso se construye manualmente la matriz exponencial compleja para aplicar la definición directa de la DFT. Este procedimiento permite ilustrar el fundamento matemático del análisis espectral, mostrando cómo se descompone la señal en sus componentes sinusoidales elementales.
+
+```python
+# --- Transformada de Fourier "normal" (DFT manual) ---
+k = np.arange(N)
+n = np.arange(N)
+exp_matrix = np.exp(-2j * np.pi * np.outer(k, n) / N)
+Y = np.dot(exp_matrix, seg_y)
+```
+En la primera parte, se generan los vectores k y n que representan los índices de frecuencia y de tiempo, respectivamente. La matriz exponencial ``exp_matrix`` contiene los términos complejos, que definen las bases armónicas de la transformada. Al multiplicar esta matriz por el vector de la señal ``seg_y``, se obtiene Y, el espectro complejo del segmento, cuyas magnitudes cuadráticas corresponden a la densidad espectral de potencia (Pxx).
+
+```python
+# --- Graficar espectro individual ---
+plt.figure(figsize=(6, 2))
+plt.plot(f, Pxx, color='darkblue')
+plt.title(f'Espectro de Potencia — Contracción {i+1}\n')
+plt.xlabel('Frecuencia (Hz)')
+plt.ylabel('Potencia')
+plt.tight_layout()
+plt.show();
+```
+Posteriormente, se grafica el espectro individual de cada contracción, mostrando cómo se distribuye la energía de la señal en el dominio de la frecuencia. Esta representación permite identificar el comportamiento espectral característico de cada activación muscular, donde el máximo de potencia suele concentrarse en las bandas de baja a media frecuencia (entre 50 y 150 Hz), típicas de la actividad electromiográfica voluntaria.
+
+El análisis de estos espectros es fundamental para estudiar la fatiga muscular, teniendo en cuenta que el desplazamiento progresivo del contenido energético hacia frecuencias más bajas refleja una disminución en la velocidad de conducción de las fibras musculares, un fenómeno directamente asociado a la fatiga fisiológica.
+
 >### Primeras 5 Contracciones
 <img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/376e2e7e-cd9e-404c-977b-55660ed9313a" />
 <img width="589" height="190" alt="image" src="https://github.com/user-attachments/assets/205b330e-df1a-4bae-aee9-194cb4b5ad51" />
@@ -365,7 +395,7 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 <img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/a98b524f-c1c3-436f-96a4-3566f1585349" />
 <img width="581" height="190" alt="image" src="https://github.com/user-attachments/assets/38e8ec74-1d4b-4e23-806d-387f414c7331" />
 
-
+En las gráficas se observa que, en las primeras contracciones, la energía de la señal se distribuye de manera más amplia y con mayor intensidad, lo que refleja una activación muscular normal y eficiente. A medida que avanzan las contracciones, el espectro de potencia muestra una disminución general en la amplitud y un desplazamiento progresivo hacia frecuencias más bajas. Este cambio indica la presencia de fatiga muscular, debido a que el músculo pierde capacidad de respuesta rápida y la actividad eléctrica se concentra en componentes de menor frecuencia, evidenciando una reducción en la velocidad de conducción de las fibras musculares.
 
 >### Análisis
 
