@@ -1046,9 +1046,6 @@ En esta sección se encuentran las señales extraídas y trabajadas a lo largo d
 
 **EMG hasta fatiga de Voluntario:** [PacienteEMG_5000.txt](https://github.com/user-attachments/files/23380814/PacienteEMG_5000.txt)
 
-> [!NOTE]
-> Ambas señales tienen una frecuencia de muestreo $f_s=5k$ $Hz$.
-
 ## Notebook
 
 **Link:** [Práctica 4 - EMG](https://colab.research.google.com/drive/1pLhhQaEHhZLiDvcKC2RjFPZOt01cU5rc?usp=sharing)
