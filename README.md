@@ -15,10 +15,21 @@
 
 > ### Parte A
 
-<img width="2338" height="4998" alt="image" src="https://github.com/user-attachments/assets/70f70e66-e93f-4850-a61d-12d15cacf684" />
+<p align="center">
+<img width="468" height="1000" alt="image" src="https://github.com/user-attachments/assets/70f70e66-e93f-4850-a61d-12d15cacf684" />
+</p>
 
 > ### Parte B
+
+<p align="center">
+<img width="461" height="1167" alt="image" src="https://github.com/user-attachments/assets/8803529a-c98e-4a73-82f2-985d3abc9eac" />
+</p>
+
 > ### Parte C
+
+<p align="center">
+<img width="461" height="616" alt="image" src="https://github.com/user-attachments/assets/0b44363f-e98c-4539-adbd-170ffa444805" />
+</p>
 
 ## Configuración inicial
 
