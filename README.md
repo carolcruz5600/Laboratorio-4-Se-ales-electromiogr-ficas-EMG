@@ -1040,12 +1040,12 @@ El análisis espectral de la señal EMG permite identificar la fatiga muscular m
 
 En esta sección se encuentran las señales extraídas y trabajadas a lo largo de la práctica en formato `.txt`, así como el link al Notebook de *Google Colab*.
 
-## Señales
+> ## Señales
 
 **EMG del Generador de Señales Biológicas:** [GeneradorEMG_5000.txt](https://github.com/user-attachments/files/23380802/GeneradorEMG_5000.txt)
 
 **EMG hasta fatiga de Voluntario:** [PacienteEMG_5000.txt](https://github.com/user-attachments/files/23380814/PacienteEMG_5000.txt)
 
-## Notebook
+> ## Notebook
 
 **Link:** [Práctica 4 - EMG](https://colab.research.google.com/drive/1pLhhQaEHhZLiDvcKC2RjFPZOt01cU5rc?usp=sharing)
