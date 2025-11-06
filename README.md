@@ -14,6 +14,9 @@
 ## Diagramas de flujo
 
 > ### Parte A
+
+<img width="2338" height="4998" alt="image" src="https://github.com/user-attachments/assets/70f70e66-e93f-4850-a61d-12d15cacf684" />
+
 > ### Parte B
 > ### Parte C
 
