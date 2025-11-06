@@ -806,6 +806,8 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 
 >### Tabla Frecuencia Media y Mediana
 
+<div align="center">
+ 
 | Contracción | Frecuencia media (Hz) | Frecuencia mediana (Hz) |
 | :---------: | :-------------------: | :---------------------: |
 |      1      |         123.67        |          88.24          |
@@ -819,6 +821,8 @@ En el código, se itera sobre cada contracción identificada en la lista filtere
 |     114     |         75.18         |          38.01          |
 |     115     |         77.27         |          28.17          |
 |     116     |         93.97         |          54.55          |
+
+</div>
 
 >### Cálculo y Gráfica Transformada de Fourier
 El siguiente fragmento de código implementa el cálculo explícito de la *Transformada Discreta de Fourier (DFT)* de cada segmento de señal EMG. A diferencia de la función np.fft —que utiliza algoritmos rápidos (FFT)—, en este caso se construye manualmente la matriz exponencial compleja para aplicar la definición directa de la DFT. Este procedimiento permite ilustrar el fundamento matemático del análisis espectral, mostrando cómo se descompone la señal en sus componentes sinusoidales elementales.
