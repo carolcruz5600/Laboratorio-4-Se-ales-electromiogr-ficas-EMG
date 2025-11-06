@@ -507,9 +507,7 @@ plt.show()
 
 ## **6. Análisis**
 
-A lo largo de las diez contracciones simuladas, se observa que la frecuencia media presenta valores entre 35,7 Hz y 40,3 Hz, mostrando un ligero incremento en las primeras contracciones y luego una tendencia a estabilizarse alrededor de los 39 Hz. Este comportamiento indica que, conforme avanza la serie de contracciones, el contenido espectral de la señal se mantiene dentro de un rango relativamente constante, lo que sugiere una actividad muscular simulada sin cambios significativos en la intensidad ni en la velocidad de las contracciones.
-
-Por otro lado, la frecuencia mediana permanece prácticamente constante en 3,89 Hz durante casi todas las contracciones, con una ligera variación inicial. Esta estabilidad refleja que la distribución de energía de la señal no experimenta desplazamientos notables hacia frecuencias más altas o más bajas. En conjunto, la constancia tanto de la frecuencia media como de la mediana sugiere que las contracciones simuladas son uniformes, sin signos de fatiga o variaciones en la respuesta del generador biológico utilizado para emular la señal EMG
+Se puede observar, que l frecuencia media en las diez contracciones se encuentra con valores entre 35,7 y 40,3 Hz, teniendo un ligero incremento para las primeras contracciones para luego llegar a una estabilidad aproximadamente de los 39 Hz. Indicando que al avanzar o seguir en las contracciones, los espectros en la señal se encuentran en un rango que se puede considerar constante, por lo que no contiene cambios signficativos en las contracciones, lo que concuerda al ser tomada por el generador de señales que simula la misma contracción en comparación a una señal tomada en una persona generando diferentes contracciones. Así mismo con la frecuencia media aque se mantiene en los mismos valores excepto para la primera contracción.
 
 # **Parte B**
 ### 1. Registro Electromiográfico
