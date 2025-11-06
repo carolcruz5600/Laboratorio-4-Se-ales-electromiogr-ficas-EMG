@@ -917,3 +917,124 @@ Asimismo, la fatiga produce una **pérdida gradual de la sincronización y el re
 En síntesis, la disminución de las componentes de alta frecuencia constituye un marcador cuantitativo de la fatiga muscular, permitiendo relacionar las variaciones del espectro de la señal EMG con los mecanismos fisiológicos subyacentes al agotamiento del tejido muscular.
 
 # **Parte C**
+## 1. Transformada Rápida de Fourier (FFT) a cada contracción
+
+Para estudiar la distribución de la energía de la señal EMG capturada del voluntario, es necesario aplicar la FFT a cada contracción detectada por el anterior algoritmo. De esta manera, es posible identificar las componentes frecuenciales predominantes de cada evento y evaluar su cambio a medida que se acerca a la fatiga muscular. Para ello, es necesario plantear un algoritmo que recorra una por una las contracciones detectadas y almacenadas en ``filtered_segs``:
+
+```python
+# Lista para guardar las frecuencias pico
+peak_freqs = []
+
+for i, (s, e) in enumerate(filtered_segs):
+    seg_y = emg[s:e]
+    N = len(seg_y)
+    if N < 4:
+        continue
+```
+
+En este fragmento `seg_y` etrae el fragmento de la señal que contiene una contracción y si el segmento es demasiado corto (`N < 4`) se omite para no generar un análisis poco confiable.
+
+> [!TIP]
+> Se puede crear una lista antes de entrar en el bucle que almacene las frecuencias pico. En este código, `peak_freqs = []` se inicializa como un vector vacío para cumplir con este papel.
+
+```python
+ # Eliminar componente DC
+    seg_y = seg_y - np.mean(seg_y)
+
+    # FFT
+    Y = np.fft.rfft(seg_y)
+    Pxx = np.abs(Y)**2 / N
+    f = np.fft.rfftfreq(N, 1 / FS)
+
+    # Guardar pico espectral (frecuencia con mayor potencia)
+    peak_freq = f[np.argmax(Pxx)]
+    peak_freqs.append(peak_freq)
+```
+Posteriormente, se elimina el offset de la señal (valor medio) para evitar que el espectro detecte los $0$ $Hz$ como mayor amplitud, restando la media de la señal segmentada en `seg_y`. A su vez, se calcula la FFT con `np.fft.rfft()`, se obtiene el espectro de potencia con su ecuación característica y se almacena en `Pxx`. El vector de las frecuencias se obtiene aplicando `np.fft.rfftfreq()` y se almacena en `f`. Para encontrar el pico espectral que resalta la frecuencia dominante de la contracción, `np.argmax(Pxx)` encuentra el índice correspondiente cuando `Pxx` es máximo, y `f[...]` selecciona la frecuencia correspondiende a ese índice. Estos picos se van añadiendo secuencialmente a `peak_freqs = []` para construir el vector que contenga todas las frecuencias dominantes de cada contracción.
+
+```python
+    # Graficar espectro
+    plt.figure(figsize=(7, 3))
+    plt.plot(f, Pxx, color='steelblue')
+    plt.title(f'FFT — Contracción {i+1}')
+    plt.xlabel('Frecuencia (Hz)')
+    plt.ylabel('Potencia relativa')
+    plt.grid(True)
+    plt.tight_layout()
+    plt.xlim(0, 200)
+    plt.show()
+```
+Por último, se grafica el espectro de cada contracción empleando la frecuencia `f` y la potencia `Pxx` (eje y), hasta $200$ $Hz$ para mejorar visualización e identificación de los picos en las frecuencias esperadas.
+
+> [!IMPORTANT]
+> No olvidar que todo el anterior código esta anidado en el bucle `if`. 
+
+## 2. Gráficas del Espectro de Amplitud
+
+A continuación se presentarán las cinco primeras y últimas gráficas del espectro de amplitud en función de la frecuencia, para realizar su respectivo análisis y comparación.
+
+>### Primeras 5 Contracciones
+
+<img width="694" height="290" alt="image" src="https://github.com/user-attachments/assets/5b6b6aa2-f90b-4f18-ac38-20856d29fada" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/f10ad12f-73de-4de2-a45e-4a7917b88875" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/9b141cb2-5e77-464c-884b-3a3ca16f01b4" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/cfc2a020-70e5-48a2-848c-cda3fcded728" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/665c152f-a9c5-441f-881b-e891b92f76a6" />
+
+>### Últimas 5 Contracciones
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/94feb606-3565-4804-a836-8fd0041dfeaf" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/afbf83c8-c846-4ed0-ad5b-66f132b6bfb7" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/4b187aca-7e38-40dd-a167-2dbe6c8e3c5d" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/33f90696-f353-48cd-8337-a4f09de8d7e2" />
+
+<img width="703" height="290" alt="image" src="https://github.com/user-attachments/assets/217ca30c-5644-4942-bc60-f3733c4ff5ab" />
+
+>### Análisis
+
+Al comparar los espectros de amplitud de las primeras y las últimas contracciones, es posible observar la **reducción progresiva** de las componentes de **alta frecuencia** en la señal. En las primeras gráficas es posible apreciar una distribución de la potencia de la señal **intermedia**, con picos notables alrededor de $20$ y $175$ $Hz$. Esto sugiere que, al inicio de la actividad, la señal EMG posee componentes de frecuencia elevadas asociadas a una mayor activación y reclutamiento de unidades motoras rápidas. En contraparte, el espectro de las últimas contracciones revela un principal pico dominante en torno a los $25$ $Hz$ y una mayor distribución de la energía en las frecuencias bajas. Esto indica que, a medida que se acerca a la **fatiga muscular**, la señal EMG **pierde componentes de alta frecuencia**; disminución en la velocidad de conducción en las fibras musculares y reclutamiento mayor de fibras lentas.
+
+## 3. Cálculo del Desplazamiento del Pico Espectral
+
+El desplazamiento del pico espectral hace referencia a el cambio en la frecuencia donde se concentra la mayor energía del espectro de la señal. Para la señal EMG, este desplazamiento refleja la disminución de las componentes de alta frecuencia de la señal a medida que se acerca a la fatiga muscular, donde la frecuencia pico inicial tiende a desplazarse hacia frecuencias más bajas. En el aplicativo de `Python`, se implementó el siguiente código para calcularlo:
+
+```python
+if len(peak_freqs) >= 2:
+    spectral_shift = np.abs(peak_freqs[-1] - peak_freqs[0])
+    print(f"Desplazamiento del pico espectral: {spectral_shift:.2f} Hz")
+else:
+    print("No hay suficientes contracciones para calcular el desplazamiento.")
+```
+El compilador verifica que existan más de dos picos para calcular el desplazamiento, luego `spectral_shift` almacena la diferencia entre la frecuencia pico de la última contracción `peak_freqs[-1]` y la primera `peak_freqs[0]`. Para el caso puntal estudiado, se obtuvo el siguiente resultado:
+
+<img width="513" height="48" alt="image" src="https://github.com/user-attachments/assets/e07fc0ee-71ae-43e5-8c66-8040c35bb048" />
+
+Un desplazamiento de $10.03$ $Hz$ sugiere que las principales componentes de frecuencia de la señal EMG disminuyeron en esa magnitud. Aunque el cambio no es muy grande, se observa una tendencia a la reducción de las componentes de alta frecuencia conforme el músculo entra en fatiga. Esto se debe a que, a medida que el músculo se somete a contracciones constantes y sin intervalos de descanso, las señales asociadas al reclutamiento de unidades motoras rápidas tienden a disminuir, reflejando una disminución en la velocidad de conducción muscular.
+
+## 4. Conclusiones
+
+El análisis espectral de la señal EMG permite identificar la fatiga muscular mediante la localización de las componentes frecuenciales dominantes en cada contracción, lo que facilita la evaluación de aspectos como la velocidad de conducción, el reclutamiento de fibras musculares rápidas y los cambios en el tipo de unidades motoras que intervienen durante el esfuerzo. Además, constituye una técnica no invasiva y cuantitativa de gran utilidad en contextos clínicos, académicos y deportivos, al posibilitar el estudio de la función neuromuscular de forma relativamente sencilla y de bajo costo. Finalmente, aunque presenta limitaciones asociadas a artefactos de movimiento, calidad de contacto de los electrodos o ruido ambiental, la aplicación adecuada de herramientas como los filtros digitales permite mitigar dichos efectos y aprovechar la técnica en diversos escenarios experimentales.
+
+# Material Complementario
+
+En esta sección se encuentran las señales extraídas y trabajadas a lo largo de la práctica en formato `.txt`, así como el link al Notebook de *Google Colab*.
+
+## Señales
+
+**EMG del Generador de Señales Biológicas:** [GeneradorEMG_5000.txt](https://github.com/user-attachments/files/23380802/GeneradorEMG_5000.txt)
+
+**EMG hasta fatiga de Voluntario:** [PacienteEMG_5000.txt](https://github.com/user-attachments/files/23380814/PacienteEMG_5000.txt)
+
+> [!NOTE]
+> Ambas señales tienen una frecuencia de muestreo $f_s=5k$ $Hz$.
+
+## Notebook
+
+**Link:** [Práctica 4 - EMG](https://colab.research.google.com/drive/1pLhhQaEHhZLiDvcKC2RjFPZOt01cU5rc?usp=sharing)
